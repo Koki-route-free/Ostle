@@ -1,1 +1,166 @@
-print("Hello")
+# 2人のプレイヤーをそれぞれBLACK,WHITEとする
+BLACK = +1
+WHITE = -1
+EMPTY = 0
+HOLL = 10
+NONE = -10
+
+
+# 初期配置
+board = [
+  [NONE,  HOLL,  HOLL,  HOLL,  HOLL,  HOLL, NONE],
+  [HOLL, WHITE, WHITE, WHITE, WHITE, WHITE, HOLL],
+  [HOLL, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, HOLL],
+  [HOLL, EMPTY, EMPTY,  HOLL, EMPTY, EMPTY, HOLL],
+  [HOLL, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, HOLL],
+  [HOLL, BLACK, BLACK, BLACK, BLACK, BLACK, HOLL],
+  [NONE,  HOLL,  HOLL,  HOLL,  HOLL, HOLL,  NONE],
+]
+
+def view_board():
+  view = [
+    [x for i, x in enumerate(board[1]) if i>0 and i<6],
+    [x for i, x in enumerate(board[2]) if i>0 and i<6],
+    [x for i, x in enumerate(board[3]) if i>0 and i<6],
+    [x for i, x in enumerate(board[4]) if i>0 and i<6],
+    [x for i, x in enumerate(board[5]) if i>0 and i<6],
+  ]
+  return view
+
+# コマとプレイヤーの表示方法
+disk_character = {EMPTY:" -", BLACK:" B", WHITE:" W", HOLL:" ●", }
+player_name = {BLACK: "BLACK : ", WHITE: "WHITE : "}
+
+# ゲームボードの表示
+def print_board():
+  view = view_board()
+  print()
+  print("  a b c d e")
+  for y, row in enumerate(view):
+      board_line = str(y + 1)
+      for disk in row:
+          board_line += disk_character[disk]
+      print(board_line)
+  print()
+
+
+    
+# プレイヤーの取得
+def opponent(player: int):
+  return player * -1
+
+# 置く位置を入力し取得
+def input_coordinate(player: int):
+  while True:
+      try:
+          coordinate = input(player_name[player] + "Input. 動かすコマの場所、動かす方向（上1左2下3右4）ex) a21 : ")
+          assert len(coordinate) == 3  # 3文字で無ければ、再入力
+          input_1 = ord(coordinate[0]) - ord("a") 
+          input_2 = int(coordinate[1]) - 1
+          input_3 = int(coordinate[2]) - 1
+          return input_1, input_2, input_3
+      except (ValueError, AssertionError):
+          pass
+
+# ゲームが終わる条件
+def finish_game():
+  view_board = view_board()
+  winner = 0
+  # 盤面のコマが3個以下になった方が負け
+  count_B = 0
+  count_W = 0
+  for i in range(5):
+    count_B += view_board[i].count(BLACK)
+    count_W += view_board[i].count(WHITE)
+  if count_B < 4:
+    winner = +1
+    return winner
+  elif count_W < 4:
+    winner = -1
+    return winner
+  else:
+    return winner
+
+# ゲームが続くかの判定
+def exist_input():
+  winner = finish_game()
+  if winner==0:
+      return True
+  else:
+      return False
+
+# ゲーム結果の表示
+def print_judgment():
+  winner = finish_game()
+  if winner == +1:
+      print("Black Winner!!")
+  elif winner == -1:
+      print("White Winner!!")
+  
+
+# 手持ちとボードの確認と実行
+def conduct_game(player:int,x:int, y:int, z:int):
+  view_board = view_board()
+  if view_board[y][x] == player:
+    if (z == 0 or 2) and (view_board[y+z-1][x] == EMPTY):
+      board[y+1][x+1] = EMPTY
+      board[y+z][x+1] = player
+      return True
+    elif (z == 0 or 2) and (view_board[y+z-1][x] == BLACK or WHITE or HOLL):
+      i = 1
+      while True:
+        if board[y+i*z-i][x+1] == HOLL:
+          board[y+i*z-i-1][x+1]
+          return True
+        
+          
+      board[y+1][x+1] = EMPTY
+          
+      return True
+    elif (z == 1 or 3) and (view_board[y+z-2][x] == EMPTY):
+      board[y+1][x+1] = EMPTY
+      
+      return True
+    elif (z == 1 or 3) and (view_board[y][x+z-2] == BLACK or WHITE):
+      board[y+1][x+1] = EMPTY
+      
+      return True
+  elif view_board[y][x] == HOLL:
+    if (z == 0 or 2) and (view_board[y+z-1][x] == EMPTY):
+      board[y+1][x+1] = EMPTY
+      board[y+z][x+1] = HOLL
+      return True
+    elif (z == 1 or 3) and (view_board[y][x+z-2] == EMPTY):
+      board[y+1][x+1] = EMPTY
+      board[y+1][x+z] = HOLL
+      return True
+  else:
+    return False
+
+# 座標入力を正しくできるまで繰り返す
+def input_disk(player: int):
+  while True:
+      x, y, z, z_value = input_coordinate(player)
+      if conduct_game(player, x, y, z, z_value):
+          break
+
+# 実際の実行関数
+def main():
+  player = BLACK
+  print_board()
+  while True:
+      input_disk(player)
+      opponent_player = opponent(player)
+      print()
+      print("-----------------")
+      print_board()
+      if exist_input():
+          player = opponent_player
+      else:
+          break
+  print_judgment()
+  print()
+
+if __name__ == "__main__":
+  main()
+  
