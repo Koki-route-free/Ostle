@@ -1,20 +1,22 @@
-# 2人のプレイヤーをそれぞれBLACK,WHITEとする
+# 2人のプレイヤーをそれぞれBLACK,WHITE
+from xml.dom import EMPTY_PREFIX
+
+
 BLACK = +1
 WHITE = -1
 EMPTY = 0
 HOLL = 10
-NONE = -10
 
 
-# 初期配置
+# 初期配置5×5の中心にホール、盤面の外にホールがあると仮定する
 board = [
-  [NONE,  HOLL,  HOLL,  HOLL,  HOLL,  HOLL, NONE],
+  [HOLL,  HOLL,  HOLL,  HOLL,  HOLL,  HOLL, HOLL],
   [HOLL, WHITE, WHITE, WHITE, WHITE, WHITE, HOLL],
   [HOLL, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, HOLL],
   [HOLL, EMPTY, EMPTY,  HOLL, EMPTY, EMPTY, HOLL],
   [HOLL, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, HOLL],
   [HOLL, BLACK, BLACK, BLACK, BLACK, BLACK, HOLL],
-  [NONE,  HOLL,  HOLL,  HOLL,  HOLL, HOLL,  NONE],
+  [HOLL,  HOLL,  HOLL,  HOLL,  HOLL, HOLL,  HOLL],
 ]
 
 def view_board():
@@ -28,15 +30,14 @@ def view_board():
   return view
 
 # コマとプレイヤーの表示方法
-disk_character = {EMPTY:" -", BLACK:" B", WHITE:" W", HOLL:" ●", }
+disk_character = {EMPTY:" - ", BLACK:" B ", WHITE:" W ", HOLL:" ● ", }
 player_name = {BLACK: "BLACK : ", WHITE: "WHITE : "}
 
 # ゲームボードの表示
 def print_board():
-  view = view_board()
   print()
-  print("  a b c d e")
-  for y, row in enumerate(view):
+  print("  a  b  c  d  e")
+  for y, row in enumerate(view_board()):
       board_line = str(y + 1)
       for disk in row:
           board_line += disk_character[disk]
@@ -53,33 +54,30 @@ def opponent(player: int):
 def input_coordinate(player: int):
   while True:
       try:
-          coordinate = input(player_name[player] + "Input. 動かすコマの場所、動かす方向（上1左2下3右4）ex) a21 : ")
+          coordinate = input(player_name[player] + "Input. 動かすコマの場所、動かす方向（上0左1下2右3）例) a21 : ")
           assert len(coordinate) == 3  # 3文字で無ければ、再入力
-          input_1 = ord(coordinate[0]) - ord("a") 
-          input_2 = int(coordinate[1]) - 1
-          input_3 = int(coordinate[2]) - 1
+          input_1 = ord(coordinate[0]) - ord("a") + 1
+          input_2 = int(coordinate[1])
+          input_3 = int(coordinate[2])
           return input_1, input_2, input_3
       except (ValueError, AssertionError):
           pass
 
 # ゲームが終わる条件
 def finish_game():
-  view_board = view_board()
+  view = view_board()
   winner = 0
   # 盤面のコマが3個以下になった方が負け
   count_B = 0
   count_W = 0
   for i in range(5):
-    count_B += view_board[i].count(BLACK)
-    count_W += view_board[i].count(WHITE)
+    count_B += view[i].count(BLACK)
+    count_W += view[i].count(WHITE)
   if count_B < 4:
     winner = +1
-    return winner
   elif count_W < 4:
     winner = -1
-    return winner
-  else:
-    return winner
+  return winner
 
 # ゲームが続くかの判定
 def exist_input():
@@ -93,55 +91,54 @@ def exist_input():
 def print_judgment():
   winner = finish_game()
   if winner == +1:
-      print("Black Winner!!")
+      print("Black Winner!")
   elif winner == -1:
-      print("White Winner!!")
+      print("White Winner!")
   
 
 # 手持ちとボードの確認と実行
 def conduct_game(player:int,x:int, y:int, z:int):
-  view_board = view_board()
-  if view_board[y][x] == player:
-    if (z == 0 or 2) and (view_board[y+z-1][x] == EMPTY):
-      board[y+1][x+1] = EMPTY
-      board[y+z][x+1] = player
-      return True
-    elif (z == 0 or 2) and (view_board[y+z-1][x] == BLACK or WHITE or HOLL):
-      i = 1
+  if board[y][x] == player:
+    i = 0
+    j = -1
+    if z == 0 or 2:
       while True:
-        if board[y+i*z-i][x+1] == HOLL:
-          board[y+i*z-i-1][x+1]
-          return True
-        
-          
-      board[y+1][x+1] = EMPTY
-          
-      return True
-    elif (z == 1 or 3) and (view_board[y+z-2][x] == EMPTY):
-      board[y+1][x+1] = EMPTY
-      
-      return True
-    elif (z == 1 or 3) and (view_board[y][x+z-2] == BLACK or WHITE):
-      board[y+1][x+1] = EMPTY
-      
-      return True
-  elif view_board[y][x] == HOLL:
-    if (z == 0 or 2) and (view_board[y+z-1][x] == EMPTY):
-      board[y+1][x+1] = EMPTY
-      board[y+z][x+1] = HOLL
-      return True
-    elif (z == 1 or 3) and (view_board[y][x+z-2] == EMPTY):
-      board[y+1][x+1] = EMPTY
-      board[y+1][x+z] = HOLL
-      return True
+        i += 1
+        j += 1
+        if board[y+i*(z-1)][x] == HOLL:
+          break
+        if board[y+i*(z-1)][x] == EMPTY:
+          board[y+i*(z-1)][x] = board[y+j*(z-1)][x]
+          break
+        board[y+i*(z-1)][x] = board[y+j*(z-1)][x]
+    elif z == 1 or 3:
+      while True:
+        i += 1
+        j += 1
+        if board[y][x+i*(z-2)] == HOLL:
+          break
+        if board[y][x+i*(z-2)] == EMPTY:
+          board[y][x+i*(z-2)] = board[y][x+j*(z-2)]
+          break
+        board[y][x+i*(z-2)] = board[y][x+j*(z-2)]
+    board[y][x] = EMPTY
+    return True
+  elif board[y][x] == HOLL:
+    if (z == 0 or 2) and (board[y+z-1][x] == EMPTY):
+      board[y+z-1][x] = HOLL
+      board[y][x] = EMPTY
+    elif (z == 1 or 3) and (board[y][x+z-2] == EMPTY):
+      board[y][x+z-2] = HOLL
+      board[y][x] = EMPTY
+    return True
   else:
     return False
 
 # 座標入力を正しくできるまで繰り返す
 def input_disk(player: int):
   while True:
-      x, y, z, z_value = input_coordinate(player)
-      if conduct_game(player, x, y, z, z_value):
+      x, y, z = input_coordinate(player)
+      if conduct_game(player, x, y, z):
           break
 
 # 実際の実行関数
