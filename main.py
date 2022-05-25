@@ -28,36 +28,36 @@ def view_board():
   ]
   return view
 
-# コマとプレイヤーの表示方法
-disk_character = {EMPTY:" - ", BLACK:" B ", WHITE:" W ", HOLL:" ● ", }
+# ぞれぞれの表示方法
+character = {EMPTY:" - ", BLACK:" B ", WHITE:" W ", HOLL:" ● ", }
 player_name = {BLACK: "BLACK : ", WHITE: "WHITE : "}
 
-# ゲームボードの表示
+# 実際に表示させる
 def print_board():
   view = view_board()
   print()
   print("  a  b  c  d  e")
-  for y, row in enumerate(view):
-      board_line = str(y + 1)
-      for disk in row:
-          board_line += disk_character[disk]
+  for i, j in enumerate(view):
+      board_line = str(i + 1)
+      for k in j:
+          board_line += character[k]
       print(board_line)
   print()
 
 
 # 毎ターンプレーヤーが変わるようにする
-def opponent(player: int):
+def another_player(player: int):
   return player * -1
 
-# 置く位置を入力し取得
-def input_coordinate(player: int):
+# 動かすコマと動かす方向を取得
+def get_place(player: int):
   while True:
       try:
-          coordinate = input(player_name[player] + "動かすコマの場所、動かす方向（上0左1下2右3）例) a21 : ")
-          assert len(coordinate) == 3  # 3文字で無ければ、再入力
-          input_1 = ord(coordinate[0]) - ord("a") + 1
-          input_2 = int(coordinate[1])
-          input_3 = int(coordinate[2])
+          place = input(player_name[player] + "動かすコマの場所、動かす方向（上0左1下2右3）例) a21 : ")
+          assert len(place) == 3  # 3文字で無ければ、再入力
+          input_1 = ord(place[0]) - ord("a") + 1
+          input_2 = int(place[1])
+          input_3 = int(place[2])
           return input_1, input_2, input_3
       except (ValueError, AssertionError):
           pass
@@ -79,27 +79,29 @@ def finish_game():
   return winner
 
 # ゲームが続くかの判定
-def exist_input():
+def continue_game():
   winner = finish_game()
   if winner==0:
       return True
   else:
       return False
 
-# ゲーム結果の表示
+# 結果の表示
 def print_judgment():
   winner = finish_game()
   if winner == +1:
-      print("Black Winner!")
+      print("黒の勝ち〜〜〜！！")
   elif winner == -1:
-      print("White Winner!")
+      print("白の勝ち〜〜〜！！")
   
 
-# 手持ちとボードの確認と実行
-def conduct_game(player:int,x:int, y:int, z:int):
+# 盤面を変える
+def change_board(player:int,x:int, y:int, z:int):
+  # 動かすコマが自分のコマの時
   if board[y][x] == player:
     new_board = []
     i = 0
+    # 動かす方向が上か下の時
     if z == 0 or z == 2:
       while True:
         i += 1
@@ -113,6 +115,7 @@ def conduct_game(player:int,x:int, y:int, z:int):
       for k, l in enumerate(new_board):
         k += 1
         board[y+k*(z-1)][x] = l
+    # 動かす方向が左右の時
     elif z == 1 or z == 3:
       while True:
         i += 1
@@ -128,6 +131,7 @@ def conduct_game(player:int,x:int, y:int, z:int):
         board[y][x+k*(z-2)] = l
     board[y][x] = EMPTY
     return True
+  # 動かすコマがブラックホールの時
   elif board[y][x] == HOLL:
     if (z == 0 or z == 2) and (board[y+z-1][x] == EMPTY):
       board[y+z-1][x] = HOLL
@@ -139,10 +143,10 @@ def conduct_game(player:int,x:int, y:int, z:int):
     return False
 
 # 座標入力を正しくできるまで繰り返す
-def input_disk(player: int):
+def get_int(player: int):
   while True:
-      x, y, z = input_coordinate(player)
-      if conduct_game(player, x, y, z):
+      x, y, z = get_place(player)
+      if change_board(player, x, y, z):
           break
 
 # 実際の実行関数
@@ -150,13 +154,12 @@ def main():
   player = BLACK
   print_board()
   while True:
-      input_disk(player)
-      opponent_player = opponent(player)
+      get_int(player)
       print()
-      print("-----------------")
+      print("----------------------")
       print_board()
-      if exist_input():
-          player = opponent_player
+      if continue_game():
+          player = another_player(player)
       else:
           break
   print_judgment()
