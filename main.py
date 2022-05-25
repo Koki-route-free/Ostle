@@ -1,6 +1,4 @@
-# 2人のプレイヤーをそれぞれBLACK,WHITE
-from xml.dom import EMPTY_PREFIX
-
+# 2人のプレイヤーをそれぞれBLACK,WHITE何もない場所をEMPTY,ブラックホールをHOLLとする
 
 BLACK = +1
 WHITE = -1
@@ -19,6 +17,7 @@ board = [
   [HOLL,  HOLL,  HOLL,  HOLL,  HOLL, HOLL,  HOLL],
 ]
 
+# 実際に見えている部分
 def view_board():
   view = [
     [x for i, x in enumerate(board[1]) if i>0 and i<6],
@@ -35,9 +34,10 @@ player_name = {BLACK: "BLACK : ", WHITE: "WHITE : "}
 
 # ゲームボードの表示
 def print_board():
+  view = view_board()
   print()
   print("  a  b  c  d  e")
-  for y, row in enumerate(view_board()):
+  for y, row in enumerate(view):
       board_line = str(y + 1)
       for disk in row:
           board_line += disk_character[disk]
@@ -45,8 +45,7 @@ def print_board():
   print()
 
 
-    
-# プレイヤーの取得
+# 毎ターンプレーヤーが変わるようにする
 def opponent(player: int):
   return player * -1
 
@@ -54,7 +53,7 @@ def opponent(player: int):
 def input_coordinate(player: int):
   while True:
       try:
-          coordinate = input(player_name[player] + "Input. 動かすコマの場所、動かす方向（上0左1下2右3）例) a21 : ")
+          coordinate = input(player_name[player] + "動かすコマの場所、動かす方向（上0左1下2右3）例) a21 : ")
           assert len(coordinate) == 3  # 3文字で無ければ、再入力
           input_1 = ord(coordinate[0]) - ord("a") + 1
           input_2 = int(coordinate[1])
@@ -99,37 +98,42 @@ def print_judgment():
 # 手持ちとボードの確認と実行
 def conduct_game(player:int,x:int, y:int, z:int):
   if board[y][x] == player:
+    new_board = []
     i = 0
-    j = -1
-    if z == 0 or 2:
+    if z == 0 or z == 2:
       while True:
         i += 1
-        j += 1
+        j = i - 1
         if board[y+i*(z-1)][x] == HOLL:
           break
-        if board[y+i*(z-1)][x] == EMPTY:
-          board[y+i*(z-1)][x] = board[y+j*(z-1)][x]
+        elif board[y+i*(z-1)][x] == EMPTY:
+          new_board.append(board[y+j*(z-1)][x])
           break
-        board[y+i*(z-1)][x] = board[y+j*(z-1)][x]
-    elif z == 1 or 3:
+        new_board.append(board[y+j*(z-1)][x])
+      for k, l in enumerate(new_board):
+        k += 1
+        board[y+k*(z-1)][x] = l
+    elif z == 1 or z == 3:
       while True:
         i += 1
-        j += 1
+        j = i - 1
         if board[y][x+i*(z-2)] == HOLL:
           break
-        if board[y][x+i*(z-2)] == EMPTY:
-          board[y][x+i*(z-2)] = board[y][x+j*(z-2)]
+        elif board[y][x+i*(z-2)] == EMPTY:
+          new_board.append(board[y][x+j*(z-2)])
           break
-        board[y][x+i*(z-2)] = board[y][x+j*(z-2)]
+        new_board.append(board[y][x+j*(z-2)])
+      for k, l in enumerate(new_board):
+        k += 1
+        board[y][x+k*(z-2)] = l
     board[y][x] = EMPTY
     return True
   elif board[y][x] == HOLL:
-    if (z == 0 or 2) and (board[y+z-1][x] == EMPTY):
+    if (z == 0 or z == 2) and (board[y+z-1][x] == EMPTY):
       board[y+z-1][x] = HOLL
-      board[y][x] = EMPTY
-    elif (z == 1 or 3) and (board[y][x+z-2] == EMPTY):
+    elif (z == 1 or z == 3) and (board[y][x+z-2] == EMPTY):
       board[y][x+z-2] = HOLL
-      board[y][x] = EMPTY
+    board[y][x] = EMPTY
     return True
   else:
     return False
