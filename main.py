@@ -1,5 +1,5 @@
 # 2人のプレイヤーをそれぞれBLACK,WHITE何もない場所をEMPTY,ブラックホールをHOLLとする
-
+# ＋1と-1にすることで-1をかけるとプレーヤーが変わるようにできる
 BLACK = +1
 WHITE = -1
 EMPTY = 0
@@ -30,7 +30,7 @@ def view_board():
 
 # ぞれぞれの表示方法
 character = {EMPTY:" - ", BLACK:" B ", WHITE:" W ", HOLL:" ● ", }
-player_name = {BLACK: "BLACK : ", WHITE: "WHITE : "}
+player_name = {BLACK: "黒 : ", WHITE: "白 : "}
 
 # 実際に表示させる
 def print_board():
@@ -38,7 +38,7 @@ def print_board():
   print()
   print("  a  b  c  d  e")
   for i, j in enumerate(view):
-      board_line = str(i + 1)
+      board_line = str(i+1)
       for k in j:
           board_line += character[k]
       print(board_line)
@@ -73,9 +73,9 @@ def finish_game():
     count_B += view[i].count(BLACK)
     count_W += view[i].count(WHITE)
   if count_B < 4:
-    winner = +1
-  elif count_W < 4:
     winner = -1
+  elif count_W < 4:
+    winner = +1
   return winner
 
 # ゲームが続くかの判定
@@ -87,15 +87,17 @@ def continue_game():
       return False
 
 # 結果の表示
-def print_judgment():
+def judgment():
   winner = finish_game()
   if winner == +1:
       print("黒の勝ち〜〜〜！！")
   elif winner == -1:
       print("白の勝ち〜〜〜！！")
+  else:
+    pass
   
 
-# 盤面を変える
+# 盤面を変えると同時に実行可能であればtrueを返す
 def change_board(player:int,x:int, y:int, z:int):
   # 動かすコマが自分のコマの時
   if board[y][x] == player:
@@ -135,10 +137,14 @@ def change_board(player:int,x:int, y:int, z:int):
   elif board[y][x] == HOLL:
     if (z == 0 or z == 2) and (board[y+z-1][x] == EMPTY):
       board[y+z-1][x] = HOLL
+      board[y][x] = EMPTY
+      return True
     elif (z == 1 or z == 3) and (board[y][x+z-2] == EMPTY):
       board[y][x+z-2] = HOLL
-    board[y][x] = EMPTY
-    return True
+      board[y][x] = EMPTY
+      return True
+    else:
+      return False
   else:
     return False
 
@@ -162,7 +168,7 @@ def main():
           player = another_player(player)
       else:
           break
-  print_judgment()
+  judgment()
   print()
 
 if __name__ == "__main__":
